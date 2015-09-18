@@ -72,7 +72,7 @@ with_complex_trend_no_jump = [
     {
         'name': 'data',
         'data_size': data_size,
-        'function': lambda i: mean + trend * math.sin(((float(i) / data_size) * math.pi))
+        'function': lambda i: mean + trend * math.sin(((float(i) / data_size) * math.pi * 2))
     },
     {
         'name': 'white-noise',
@@ -102,8 +102,12 @@ def generate_data(configs):
     return data_sum, np.range(len(data_sum)), series
 
 
-def moving_average(data, window_size=10):
+def moving_average(data, window_size=20):
     data_size = len(data)
+
+    if window_size == 0:
+        return data, np.range(data_size)
+
     y = np.zeros(data_size)
     for i in range(data_size):
         y[i] = np.sum(data[i:(i + window_size)])
@@ -119,11 +123,12 @@ x3, y3, s3 = generate_data(with_complex_trend_no_jump)
 # data_histogram = np.histogram(data, bins=14)
 # plt.plot(y1, x1, 'r', y2, x2, 'b', y3, x3, 'g')
 
-x1, y1 = moving_average(x1)
-x2, y2 = moving_average(x2)
-x3, y3 = moving_average(x3)
+moving_average_filter_size = 0
+x1, y1 = moving_average(x1, moving_average_filter_size)
+x2, y2 = moving_average(x2, moving_average_filter_size)
+x3, y3 = moving_average(x3, moving_average_filter_size)
 
-plt.plot(y1, x1, 'r.', y2, x2, 'b.', y3, x3, 'g.')
+plt.plot(y1, x1, 'r', y2, x2, 'b', y3, x3, 'g')
 plt.grid(True)
 plt.show()
 
