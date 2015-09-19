@@ -1,93 +1,24 @@
-# encoding: utf-8
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
 # author:   Jan Hybs
+
+
+
 import numpy as np
+
 import matplotlib.mlab as mlab
 import matplotlib.pyplot as plt
-# import matplotlib.animation as animation
 import math
+from config.no_trend_no_jump import no_trend_no_jump
+from config.normal_distribution import normal_distribution
+from config.uniform_distribution import uniform_distribution
+from config.with_complex_trend_no_jump import with_complex_trend_no_jump
+from config.with_trend_no_jump import with_trend_no_jump
 import utils.vector
 from utils.timer import Timer
 
 timer = Timer()
 
-
-# number of elements
-data_size = 1000
-
-# mean value and trend change
-mean = 0
-trend = 50
-
-# noise standard deviation and mean
-noise_sigma = 5
-noise_mean = 0
-
-# spike standard deviation, mean and probability of spike occurrence
-spike_sigma = 20
-spike_mean = 0
-spike_prob = 0.95
-
-
-# data without any trend
-# data with white/Gaussian noise (constant power spectral density)
-no_trend_no_jump = [
-    {
-        'name': 'data',
-        'data_size': data_size,
-        'function': lambda i: mean
-    },
-    {
-        'name': 'white-noise',
-        'data_size': data_size,
-        'function': lambda i: np.random.normal(noise_mean, noise_sigma)
-    },
-    {
-        'name': 'spike-noise',
-        'data_size': data_size,
-        # with probability of 5% random spike noise will be generated
-        'function': lambda i: np.random.normal(spike_mean, spike_sigma) if np.random.random() >= spike_prob else 0.0
-    },
-]
-with_trend_no_jump = [
-    {
-        'name': 'data',
-        'data_size': data_size,
-        'function': lambda i: mean + (float(i) / data_size) * trend
-    },
-    {
-        'name': 'white-noise',
-        'data_size': data_size,
-        'function': lambda i: np.random.normal(noise_mean, noise_sigma)
-    },
-    {
-        'name': 'spike-noise',
-        'data_size': data_size,
-        # with probability of 5% random spike noise will be generated
-        # mean is 0
-        # standard deviation is 100
-        'function': lambda i: np.random.normal(spike_mean, spike_sigma) if np.random.random() >= spike_prob else 0.0
-    },
-]
-with_complex_trend_no_jump = [
-    {
-        'name': 'data',
-        'data_size': data_size,
-        'function': lambda i: mean + trend * math.sin(((float(i) / data_size) * math.pi * 2))
-    },
-    {
-        'name': 'white-noise',
-        'data_size': data_size,
-        'function': lambda i: np.random.normal(noise_mean, noise_sigma)
-    },
-    {
-        'name': 'spike-noise',
-        'data_size': data_size,
-        # with probability of 5% random spike noise will be generated
-        # mean is 0
-        # standard deviation is 100
-        'function': lambda i: np.random.normal(spike_mean, spike_sigma) if np.random.random() >= spike_prob else 0.0
-    },
-]
 
 
 def generate_data(configs):
@@ -116,48 +47,56 @@ def moving_average(data, window_size=20):
     return y[0:-window_size], np.range(window_size, data_size)
 
 
-x1, y1, s1 = generate_data(with_trend_no_jump)
-x2, y2, s2 = generate_data(no_trend_no_jump)
-x3, y3, s3 = generate_data(with_complex_trend_no_jump)
+data = []
+data.append(generate_data(with_trend_no_jump))
+data.append(generate_data(no_trend_no_jump))
+data.append(generate_data(with_complex_trend_no_jump))
+# data.append(generate_data(normal_distribution))
+# data.append(generate_data(uniform_distribution))
 
-# data_histogram = np.histogram(data, bins=14)
-# plt.plot(y1, x1, 'r', y2, x2, 'b', y3, x3, 'g')
+moving_average_filter_size = 5
+filtered_data = []
+for x, y, s in data:
+    x_, y_ = moving_average(x, moving_average_filter_size)
+    filtered_data.append((x_, y_, None))
 
-moving_average_filter_size = 0
-x1, y1 = moving_average(x1, moving_average_filter_size)
-x2, y2 = moving_average(x2, moving_average_filter_size)
-x3, y3 = moving_average(x3, moving_average_filter_size)
 
-plt.plot(y1, x1, 'r', y2, x2, 'b', y3, x3, 'g')
-plt.grid(True)
+f, subplots = plt.subplots(2, sharex=True)
+subplots[0].grid(True)
+subplots[1].grid(True)
+
+# original data
+colors = ['r', 'g', 'b', (1, 1, 0)]
+for x, y, s in data:
+    subplots[0].scatter(y, x, marker='x', c=colors.pop())
+
+# filtered data with moving average filter
+colors = ['r', 'g', 'b', (1, 1, 0)]
+for x, y, s in filtered_data:
+    subplots[1].scatter(y, x, marker='x', c=colors.pop())
+
+
+plt.figure(1)
+f, subplots = plt.subplots(2, len(data), sharex=True)
+
+
+
+# histogram of original data
+colors = ['r', 'g', 'b', (1, 1, 0)]
+i = 0
+for x, y, s in data:
+    hist, bins = np.histogram(x, bins=20)
+    widths = np.diff(bins)
+    subplots[0][i].bar(bins[:-1], hist, widths, facecolor=colors.pop())
+    i += 1
+
+# histogram of filtered data with moving average filter
+colors = ['r', 'g', 'b', (1, 1, 0)]
+i = 0
+for x, y, s in filtered_data:
+    hist, bins = np.histogram(x, bins=20)
+    widths = np.diff(bins)
+    subplots[1][i].bar(bins[:-1], hist, widths, facecolor=colors.pop())
+    i += 1
+
 plt.show()
-
-
-
-
-#
-# # uniform distribution: (b - a) * random() + a; sigma = b - a; mu = a
-# elem_size = 100
-#
-# spike_prob = 0.2
-# spike_mu = -25
-# spike_sigma = 100
-#
-# mu = -10
-# sigma = 20
-#
-# x = np.ones(elem_size) * mu
-# noise = sigma * np.random.random(elem_size)
-# spikes = np.array([np.random.random() * spike_sigma + spike_mu if np.random.random() < spike_prob else 0 for i in
-# range(0, elem_size)])
-#
-# y = x + noise + spikes
-# t = np.range(elem_size) + 1000
-#
-# plt.stem(t, y)
-# plt.ylabel('f(x)')
-# plt.xlabel('x')
-# plt.grid(True)
-# plt.title(r'Histogram of IQ$\,\sigma_i=15$')
-# plt.show()
-
