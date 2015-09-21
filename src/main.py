@@ -1,177 +1,79 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 # author:   Jan Hybs
-
-
+import math
 
 import numpy as np
-
-import matplotlib.mlab as mlab
+import collections
+import filters as fltrs
 import matplotlib.pyplot as plt
-import math
-from config.no_trend_no_jump import no_trend_no_jump
-from config.normal_distribution import normal_distribution
-from config.uniform_distribution import uniform_distribution
-from config.no_trend_no_jump_with_variation import no_trend_no_jump_with_variation
-from config.with_complex_trend_no_jump import with_complex_trend_no_jump
-from config.with_trend_no_jump import with_trend_no_jump
+import matplotlib.patches as mpatches
+from data import generate_data
+
 from utils.colors import Colors
-import utils.vector
+from utils.subplots import Subplots
 from utils.timer import Timer
+from config import *
+
 
 timer = Timer()
-
-
-def generate_data(configs):
-    series = []
-    for config in configs:
-        data = np.zeros(config['data_size'])
-        for i in range(0, config['data_size']):
-            data[i] = config['function'](i)
-        series.append(data)
-
-    data_sum = np.sum(series, axis=0)
-    return data_sum, np.range(len(data_sum))
-
-
-def moving_average(x, l=20):
-    """
-    Moving average filter
-    :param x:
-    :param l: moving average size
-    :return: filtered data
-    """
-    n = len(x)
-
-    if l == 0:
-        return x[:]
-
-    y = np.zeros(n)
-    for i in range(0, n):
-        y[i] = np.sum(x[i:(i + l)])
-    y /= l
-
-    return y
-
-
-def moving_average_complex(x, window=np.hamming(21) / np.sum(np.hamming(21))):
-    n = len(x)
-    l = len(window)
-    if l == 0:
-        return x[:]
-
-    # causal filter
-    xc = np.append(x[:], np.zeros(l))
-    y = np.zeros(n)
-    for i in range(0, n):
-        y[i] = np.sum(np.multiply(xc[i:i+l], window))
-
-    # # non-causal filter
-    # lp = l/2
-    # xc = np.append(np.zeros(lp), [x[:], np.zeros(l - lp)])
-    # y = np.zeros(n)
-    # for i in range(lp, n + lp):
-    #     print len (xc[i - lp:i + l - lp]), i - lp, i + l - lp
-    #     # y[i] = np.sum(np.multiply(xc[i - l / 2:i + l - l / 2], window))
-
-    return y
-
-
-def ewma(x, lam=0.1, L=3):
-    """
-    Exponentially weighted moving average
-    :param arr: input array
-    :param lam: λ, the weight given to the most recent rational subgroup mean
-    :param L: L, the multiple of the rational subgroup standard deviation that establishes the control limits. L is typically set at 3 to match other control charts, but it may be necessary to reduce L slightly for small values of λ
-    :return: observations z_i
-    """
-    n = len(x)
-    z = np.zeros(n)
-
-    z[0] = x[0]
-    for i in range(1, n):
-        z[i] = lam * x[i] + (1 - lam) * z[i - 1]
-    return z
-
-
-colors = Colors(['red', 'blue', 'green', 'red', 'blue', 'green', 'red', 'blue', 'green'])
-
+colors = Colors(['datafilter']*10)
 data = []
-ma_data = []
-ewma_data = []
-# data.append(generate_data(with_trend_no_jump))
-# data.append(generate_data(no_trend_no_jump))
-data.append(generate_data(with_complex_trend_no_jump))
-# data.append(generate_data(no_trend_no_jump_with_variation))
-# data.append(generate_data(normal_distribution))
-# data.append(generate_data(uniform_distribution))
+filtered = []
 
-filter_ma = True
-if filter_ma:
-    ma_lenght = 10
+
+filters = [
+    fltrs.ewma,
+    fltrs.ewma_adaptive_variance,
+    fltrs.ewma_variance,
+    fltrs.maww
+]
+
+configs = [
+    data_trend,
+    # data_simple,
+    data_complex_trend,
+    data_variation,
+    # data_reversed_trend,
+    data_trend_jump,
+]
+for config in configs:
+    data.append(generate_data(config))
+
+
+for f in filters:
+    index = filters.index(f)
+    filtered.append([])
     for x, y in data:
-        x_ = moving_average_complex(x)
-        # x_ = x[0:-ma_lenght]
-        y_ = np.range(len(x_))
-        ma_data.append((x_, y_))
+        print "Filtering data using {}".format(f.func_name)
+        x_ = f(x)
+        y_ = np.range(len(x_)) if type(x_) is not tuple else ([range(len(x_[0]))] * len(x_))
+        filtered[index].append((x_, y_))
 
-filter_ewma = True
-if filter_ewma:
-    for x, y in data:
-        x_ = ewma(x)
-        y_ = y[:]
-        ewma_data.append((x_, y_))
+dim = Subplots.get_dimensions(len(data))
+figure, subplots = plt.subplots(*dim, sharex=True, sharey=True)
+plots = Subplots(subplots)
+plots.grid(True)
 
-plot_data = True
-if plot_data:
-    f, subplots = plt.subplots(2, sharex=True)
-    subplots[0].grid(True)
-    subplots[1].grid(True)
+colors.reset()
+for i in range(len(data)):
+    c = Colors.create(colors.next(), len(filters))
+    plots[i].scatter(data[i][1], data[i][0], marker='x', c=c.next())
+    legends = [mpatches.Patch(color=c.prev(), label=configs[i].name)]
 
-    # original data
-    colors.reset()
-    c = Colors.create(colors.next(), 3)
-    for i in range(0, len(data)):
-        x, y = data[i]
-        x_ma, y_ma = ma_data[i]
-        x_ewma, y_ewma = ewma_data[i]
-        subplots[0].scatter(y, x, marker='x', c=c.next())
-        subplots[0].plot(y_ma, x_ma, c=c.next())
-        subplots[0].plot(y_ewma, x_ewma, c=c.next())
+    for f in filters:
+        j = filters.index(f)
+        filter_data_x = filtered[j][i][0]
+        filter_data_y = filtered[j][i][1]
+        if type(filter_data_x) is tuple:
+            cc = c.next()
+            for k in range(len(filter_data_x)):
+                plots[i].plot(filter_data_y[k], filter_data_x[k], c = cc)
+        else:
+            plots[i].scatter(filter_data_y, filter_data_x, marker='x', c=c.next())
+        legends.append(mpatches.Patch(color=c.prev(), label=f.func_name))
 
-        c = Colors.create(colors.next(), 3)
+    plots[i].legend(handles=legends, loc=0)
 
-    # filtered data with moving average filter
-    colors.reset()
-    c = Colors.create(colors.next(), 2)
-    for i in range(0, len(data)):
-        x_ma, y_ma = ma_data[i]
-        x_ewma, y_ewma = ewma_data[i]
-        subplots[1].scatter(y_ma, x_ma, marker='x', c=c.next())
-        subplots[1].scatter(y_ewma, x_ewma, marker='x', c=c.next())
-        c = Colors.create(colors.next(), 2)
-
-plot_histogram = False
-if plot_histogram:
-    plt.figure(1)
-    f, subplots = plt.subplots(2, len(data), sharex=True)
-
-    # histogram of original data
-    colors.reset()
-    i = 0
-    for x, y in data:
-        hist, bins = np.histogram(x, bins=20)
-        widths = np.diff(bins)
-        subplots[0][i].bar(bins[:-1], hist, widths, facecolor=colors.next())
-        i += 1
-
-        # histogram of filtered data with moving average filter
-        colors.reset()
-    i = 0
-    for x, y in ma_data:
-        hist, bins = np.histogram(x, bins=20)
-        widths = np.diff(bins)
-        subplots[1][i].bar(bins[:-1], hist, widths, facecolor=colors.next())
-        i += 1
 
 plt.show()
