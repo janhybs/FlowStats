@@ -17,10 +17,9 @@ from config import *
 
 
 timer = Timer()
-colors = Colors(['datafilter']*10)
+colors = Colors(['normal'] * 10)
 data = []
 filtered = []
-
 
 filters = [
     fltrs.ewma,
@@ -40,7 +39,6 @@ configs = [
 for config in configs:
     data.append(generate_data(config))
 
-
 for f in filters:
     index = filters.index(f)
     filtered.append([])
@@ -58,7 +56,7 @@ plots.grid(True)
 colors.reset()
 for i in range(len(data)):
     c = Colors.create(colors.next(), len(filters))
-    plots[i].scatter(data[i][1], data[i][0], marker='x', c=c.next())
+    plots[i].plot(data[i][1], data[i][0], '.-', c=c.next(), lw=0.1)
     legends = [mpatches.Patch(color=c.prev(), label=configs[i].name)]
 
     for f in filters:
@@ -68,12 +66,11 @@ for i in range(len(data)):
         if type(filter_data_x) is tuple:
             cc = c.next()
             for k in range(len(filter_data_x)):
-                plots[i].plot(filter_data_y[k], filter_data_x[k], c = cc)
+                plots[i].plot(filter_data_y[k], filter_data_x[k], c=cc)
         else:
-            plots[i].scatter(filter_data_y, filter_data_x, marker='x', c=c.next())
+            plots[i].plot(filter_data_y, filter_data_x, '.-', c=c.next(), lw=0.2)
         legends.append(mpatches.Patch(color=c.prev(), label=f.func_name))
 
     plots[i].legend(handles=legends, loc=0)
-
 
 plt.show()
