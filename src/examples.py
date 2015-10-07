@@ -93,13 +93,103 @@ def spearmanr(x, y):
     return 1 - (6.0 * ds) / (n * (n * n - 1.0))
 
 
-x = np.array([106, 86, 100, 101, 99, 103, 97, 113, 112, 110])
-y = np.array([  7,  0,  27,  50, 28,  29, 20,  12,   6,  17])
+def mean(x):
+    """
+    x-bar = mean and expected value are used synonymously to refer to one measure of the central
+        tendency either of a probability distribution or of the random variable
+        characterized by that distribution
+    :param x:
+    :return:
+    """
+    n = len(x)
+    return np.sum(x) / n
 
 
-print scipy.stats.stats.spearmanr(x, y)
-print spearmanr (x, y)
-print pearsonr(x, y)
+def variance(x):
+    """
+    s^2 = measures how far a set of numbers is spread out
+    :param x:
+    :return:
+    """
+    n = len(x)
+    xbar = mean(x)
+    return (np.sum(x * x) - n * (xbar * xbar)) / (n - 1)
 
-plt.scatter(x, y)
-plt.show()
+
+def standard_deviation(x):
+    """
+    sqrt(s^2) = s
+    :param x:
+    :return:
+    """
+    return math.sqrt(variance(x))
+
+
+def median(x):
+    """
+    median is the number separating the higher half of a data sample, a population, or a probability distribution, from the lower half
+    :param x:
+    :return:
+    """
+    n = len(x)
+    sx = np.sort(x)
+    if n % 2 == 0:
+        return (sx[(n - 1) / 2] + sx[(n) / 2]) / 2
+    return sx[n / 2]
+
+
+def quantile(x, percent=0.25):
+    n = len(x)
+    sx = np.sort(x)
+    if n * percent == int(n * percent):
+        return (sx[(n - 1) * percent] + sx[(n) * percent]) / 2
+    return sx[n * percent]
+
+
+def modus(x):
+    occurrences = { }
+    for value in x:
+        if occurrences.get(str(value), None) is None:
+            occurrences[str(value)] = 0
+        occurrences[str(value)] += 1
+
+    max_occurrence = max(occurrences.values())
+    max_list = list()
+    for value in occurrences.keys():
+        if occurrences[value] == max_occurrence:
+            max_list.append(value)
+    return float(max_list[0]) if len(max_list) == 1 else None
+
+
+def histogram(x, bins=10):
+    # return np.histogram(x, bins)
+    min_value = min(x)
+    max_value = max(x)
+    delta = float(max_value - min_value)
+    step = delta / bins
+
+    bins_list = [-float("inf")] + [min_value + step * i for i in range(1, bins + 1)]
+    hist = [0] * (len(bins_list) - 1)
+
+    for value in x:
+        for i in range(0, len(bins_list) - 1):
+            if bins_list[i] < value <= bins_list[i + 1]:
+                hist[i] += 1
+                break
+
+    return hist, bins_list
+
+
+x = np.array([106., 86, 100, 101, 99, 103, 97, 113, 112, 110])
+y = np.array([7, 0, 27, 50, 28, 29, 20, 12, 6, 17])
+
+x = np.array([12, 27, 20, 19, 20, 15, 23, 14, 26, 22, 19, 21, 20, 17, 32, 23.])
+
+print histogram(x)
+#
+# print scipy.stats.stats.spearmanr(x, y)
+# print spearmanr (x, y)
+# print pearsonr(x, y)
+#
+# plt.scatter(x, y)
+# plt.show()
