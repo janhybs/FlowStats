@@ -7,6 +7,9 @@ import numpy as np
 import utils
 import scipy.stats
 import matplotlib.pyplot as plt
+
+
+
 #
 #
 # x = np.array([0.0, 1.0, 2.0, 3.0,  4.0,  5.0])
@@ -79,7 +82,7 @@ def spearmanr(x, y):
     n = len(x)
     xi = np.argsort(x)
     yi = np.argsort(y)
-    yii = np.argsort(yi)
+    yii = np.argsort(yi)  # inverse
 
     # xs = np.array([x[i] for i in xi])
     # ys = np.array([y[i] for i in xi])
@@ -179,6 +182,44 @@ def histogram(x, bins=10):
 
     return hist, bins_list
 
+
+def regression_line(x, y):
+    # \hat{\beta} = \sum {y_i(x - \bar{x}}) / \sum{(x_i - \bar{x})^2}
+    # \hat{\beta} = \frac{\bar{xy} - \bar{x}\bar{y}} { \bar{x^2} - \bar{x}^2 }
+    # \hat{\alpha} = \bar{y} - \hat{\beta}\bar{x}
+    beta = np.sum(y * (x - np.mean(x))) / np.sum((x - np.mean(x)) * (x - np.mean(x)))
+    alpha = np.mean(y) - beta * np.mean(x)
+    return beta, alpha
+
+
+x = np.array([0, 1, 2, 3])
+# x = np.array([30, 61, 42, 19, 47, 52, 35, 27.])
+y = np.array([-2, 0.2, 0.9, 2.1])
+# y = np.array([1.6, 2.8, 2.2, 1.4, 2.7, 2.5, 2.6, 1.9])
+
+
+# print regression_line(x, y)
+
+X = np.vstack([x * 0 + 1, x, x * x]).T
+alpha = np.zeros(len(x))
+print np.dot(np.dot(np.linalg.inv(np.dot(X.T, X)), X.T), y)
+
+print alpha
+
+exit(0)
+beta, alpha = regression_line(x, y)
+plt.scatter(x, y)
+plt.plot(x, x * beta + alpha, 'r', label='Fitted line')
+beta = 0.0148
+plt.plot(x, x * beta + alpha)
+beta = 0.0502
+plt.plot(x, x * beta + alpha)
+plt.legend()
+plt.show()
+
+print pearsonr(x, y)
+
+exit(0)
 
 x = np.array([106., 86, 100, 101, 99, 103, 97, 113, 112, 110])
 y = np.array([7, 0, 27, 50, 28, 29, 20, 12, 6, 17])

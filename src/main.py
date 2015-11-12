@@ -22,10 +22,11 @@ data = []
 filtered = []
 
 filters = [
-    fltrs.ewma,
-    fltrs.ewma_adaptive_variance,
-    fltrs.ewma_variance,
-    fltrs.maww
+    # fltrs.ewma,
+    fltrs.ewma_adaptive_variance_linear,
+    # fltrs.ewma_variance,
+    # fltrs.maww,
+    # fltrs.des
 ]
 
 configs = [

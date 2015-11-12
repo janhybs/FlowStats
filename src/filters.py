@@ -112,13 +112,48 @@ def ewma_adaptive_variance(x, lam=0.2, L=3, l=100):
 
     i = 0
     s = math.sqrt(lam / (2 - lam))
-    for j in range (l, n+l, l):
+    for j in range(l, n + l, l):
         mean = np.mean(x[i:j])
         sigma = math.sqrt(np.var(x[i:j]))
         ucl[i:j] = np.ones(l) * (mean + L * s * sigma)
         lcl[i:j] = np.ones(l) * (mean - L * s * sigma)
         i = j
 
+    # ucl = ewmap(ucl)
+    # lcl = ewmap(lcl)
+
+    return ucl, lcl
+
+
+def ewma_adaptive_variance_linear(x, lam=0.25, L=3, l=50):
+    """
+    Exponentially weighted moving average adaptive control chart
+    :param x: input data
+    :param lam: λ, the weight given to the most recent rational subgroup mean
+    :param L: L, the multiple of the rational subgroup standard deviation that establishes the control limits. L is typically set at 3 to match other control charts, but it may be necessary to reduce L slightly for small values of λ
+    :return:
+    """
+    n = len(x)
+    ucl = np.zeros(n)
+    lcl = np.zeros(n)
+
+    i = 0
+    ucl[i-1] = np.max(x[0:25])
+    lcl[i-1] = np.min(x[0:25])
+    s = math.sqrt(lam / (2 - lam))
+    for j in range(l, n + l, l):
+        mean = np.mean(x[i:j])
+        sigma = math.sqrt(np.var(x[i:j]))
+        ucl_val = mean + L * s * sigma
+        lcl_val = mean - L * s * sigma
+
+
+        ucl[i:j] = np.linspace(ucl[i-1], ucl_val, l)
+        lcl[i:j] = np.linspace(lcl[i-1], lcl_val, l)
+        i = j
+
+    # ucl = ewmap(ucl)
+    # lcl = ewmap(lcl)
 
     return ucl, lcl
 
@@ -181,5 +216,5 @@ __all__ = [
     ewma_variance,
     ewma_adaptive_variance,
     # des,
-    _combine (ewmap, des, maww)
+    _combine(ewmap, des, maww)
 ]
