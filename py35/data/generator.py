@@ -60,15 +60,14 @@ data = generate(
     ]
 )
 
-raw_data = data
+# generate data
 sma_data = filters.sma_filter(*data)
 maww_data = filters.maww_filter(*data)
 ewma_data = filters.ewma_filter(*data)
 des_data = filters.des_filter(*data)
 
-
 # plot data and filtered data
-plot(raw_data,  'blue',     'scatter', **scatter_settings)
+plot(data,      'blue',     'scatter', **scatter_settings)
 plot(sma_data,  'red',      'plot')
 plot(maww_data, 'green',    'plot')
 plot(ewma_data, 'black',    'plot')
