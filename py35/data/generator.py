@@ -7,7 +7,6 @@ import matplotlib.pyplot as plt
 
 from data import filters
 
-
 class DataConfig(object):
     def __init__(self, size, generator, start=0):
         self.size = size
@@ -50,42 +49,42 @@ def plot(data, color, method='scatter', **kwargs):
     getattr(plt, method)(*data, c=color, **kwargs)
 
 
-scatter_settings = dict(edgecolors='none')
-data = generate(
-    [
-        DataConfig(300, constant_generator(sigma=0.5)),
-        DataConfig(300, constant_generator(sigma=2.0)),
-        DataConfig(300, exponential_generator(scale=0.0001)),
-        DataConfig(300, linear_generator(scale=0.01), start=int(300*300*0.01))
-    ]
-)
-
-# generate data
-sma_data = filters.sma_filter(*data)
-maww_data = filters.maww_filter(*data)
-ewma_data = filters.ewma_filter(*data)
-des_data = filters.des_filter(*data)
-
-# plot data and filtered data
-plot(data,      'blue',     'scatter', **scatter_settings)
-plot(sma_data,  'red',      'plot')
-plot(maww_data, 'green',    'plot')
-plot(ewma_data, 'black',    'plot')
-plot(des_data,  'brown',    'plot')
-
-# combining filters
-des_ewma = filters.combine_filter(filters.des_filter, filters.ewma_filter)
-plot(des_ewma(*data), 'pink', 'scatter')
-
-# plot control chart
-ucl, lcl = filters.ewma_variance(*data)
-plot(ucl, 'purple', 'plot')
-plot(lcl, 'purple', 'plot')
-
-# dynamic controls
-ducl, dlcl = filters.ewma_adaptive_variance_linear(*data)
-plot(ducl, 'orange', 'plot')
-plot(dlcl, 'orange', 'plot')
-
-plt.show()
-
+# scatter_settings = dict(edgecolors='none')
+# data = generate(
+#     [
+#         DataConfig(300, constant_generator(sigma=0.5)),
+#         DataConfig(300, constant_generator(sigma=2.0)),
+#         DataConfig(300, exponential_generator(scale=0.0001)),
+#         DataConfig(300, linear_generator(scale=0.01), start=int(300*300*0.01))
+#     ]
+# )
+#
+# # generate data
+# sma_data = filters.sma_filter(*data)
+# maww_data = filters.maww_filter(*data)
+# ewma_data = filters.ewma_filter(*data)
+# des_data = filters.des_filter(*data)
+#
+# # plot data and filtered data
+# plot(data,      'blue',     'scatter', **scatter_settings)
+# plot(sma_data,  'red',      'plot')
+# plot(maww_data, 'green',    'plot')
+# plot(ewma_data, 'black',    'plot')
+# plot(des_data,  'brown',    'plot')
+#
+# # combining filters
+# des_ewma = filters.combine_filter(filters.des_filter, filters.ewma_filter)
+# plot(des_ewma(*data), 'pink', 'scatter')
+#
+# # plot control chart
+# ucl, lcl = filters.ewma_variance(*data)
+# plot(ucl, 'purple', 'plot')
+# plot(lcl, 'purple', 'plot')
+#
+# # dynamic controls
+# ducl, dlcl = filters.ewma_adaptive_variance_linear(*data)
+# plot(ducl, 'orange', 'plot')
+# plot(dlcl, 'orange', 'plot')
+#
+# plt.show()
+#
