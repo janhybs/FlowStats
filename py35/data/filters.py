@@ -18,8 +18,8 @@ def sma_filter(x, y, l=11, trim=False):
     n = len(y)
     Y = np.zeros(n)
     for i in range(0, n):
-        Y[i] = np.sum(y[i:(i + l)])
-    Y /= l
+        Y[i] = np.mean(y[i:(i + l)])
+    # Y /= l
 
     if trim:
         return x[:-l], Y[:-l]
@@ -41,7 +41,7 @@ def maww_filter(x, y, window=weighted_hamming, causal=True):
 
     # causal filter
     if causal:
-        xc = np.append(y[:], np.zeros(l))
+        xc = np.append(y[:], np.ones(l) * y[-1])
         Y = np.zeros(n)
         for i in range(0, n):
             Y[i] = np.sum(np.multiply(xc[i:i + l], window))
@@ -108,7 +108,7 @@ def ewma_variance(x, y, lam=0.2, L=3):
     return (x, ucl), (x, lcl)
 
 
-def ewma_adaptive_variance_linear(x, y, lam=0.5, L=3, l=50):
+def ewma_adaptive_variance_linear2(x, y, lam=0.5, L=3, l=50):
     """
     Exponentially weighted moving average adaptive control chart
     :param y: input data
@@ -121,8 +121,8 @@ def ewma_adaptive_variance_linear(x, y, lam=0.5, L=3, l=50):
     lcl = np.zeros(n)
 
     i = 0
-    ucl[i-1] = np.max(y[0:25])
-    lcl[i-1] = np.min(y[0:25])
+    ucl[i-1] = np.max(y[0:int(l/2)])
+    lcl[i-1] = np.min(y[0:int(l/2)])
     s = np.math.sqrt(lam / (2 - lam))
     for j in range(l, n + l, l):
         mean = np.mean(y[i:j])
@@ -136,6 +136,27 @@ def ewma_adaptive_variance_linear(x, y, lam=0.5, L=3, l=50):
 
     # ucl = ewmap(ucl)
     # lcl = ewmap(lcl)
+
+    return (x, ucl), (x, lcl)
+
+
+def ewma_adaptive_variance_linear(x, y, lam=0.5, L=3, l=30):
+    i = 0
+    n = len(x)
+
+    ucl = np.zeros(n)
+    lcl = np.zeros(n)
+    while True:
+        x_piece = x[i * l:(i + 1) * l]
+        y_piece = y[i * l:(i + 1) * l]
+
+        if not len(x_piece):
+            break
+
+        _ucl, _lcl = ewma_variance(x_piece, y_piece, lam, L)
+        ucl[i * l:(i + 1) * l] = _ucl[1]
+        lcl[i * l:(i + 1) * l] = _lcl[1]
+        i += 1
 
     return (x, ucl), (x, lcl)
 
@@ -170,3 +191,17 @@ def combine_filter(*functions):
             x, y = function(x, y)
         return x, y
     return combine
+
+
+def outside_bounds(x, y, ucl, lcl):
+    x_over = list()
+    y_over = list()
+
+    i = 0
+    for i in range(len(y)):
+        yi = y[i]
+        xi = x[i]
+        if (yi > ucl[1][i] or yi < lcl[1][i]):
+            y_over.append(yi)
+            x_over.append(xi)
+    return x_over, y_over
