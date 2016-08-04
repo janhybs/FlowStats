@@ -192,42 +192,44 @@ def regression_line(x, y):
     return beta, alpha
 
 
-x = np.array([0, 1, 2, 3])
-# x = np.array([30, 61, 42, 19, 47, 52, 35, 27.])
-y = np.array([-2, 0.2, 0.9, 2.1])
-# y = np.array([1.6, 2.8, 2.2, 1.4, 2.7, 2.5, 2.6, 1.9])
 
 
-# print regression_line(x, y)
-
-X = np.vstack([x * 0 + 1, x, x * x]).T
-alpha = np.zeros(len(x))
-print np.dot(np.dot(np.linalg.inv(np.dot(X.T, X)), X.T), y)
-
-print alpha
-
-exit(0)
-beta, alpha = regression_line(x, y)
-plt.scatter(x, y)
-plt.plot(x, x * beta + alpha, 'r', label='Fitted line')
-beta = 0.0148
-plt.plot(x, x * beta + alpha)
-beta = 0.0502
-plt.plot(x, x * beta + alpha)
-plt.legend()
-plt.show()
-
-print pearsonr(x, y)
-
-exit(0)
-
-x = np.array([106., 86, 100, 101, 99, 103, 97, 113, 112, 110])
-y = np.array([7, 0, 27, 50, 28, 29, 20, 12, 6, 17])
-
-x = np.array([12, 27, 20, 19, 20, 15, 23, 14, 26, 22, 19, 21, 20, 17, 32, 23.])
-
-print histogram(x)
+# x = np.array([0, 1, 2, 3])
+# # x = np.array([30, 61, 42, 19, 47, 52, 35, 27.])
+# y = np.array([-2, 0.2, 0.9, 2.1])
+# # y = np.array([1.6, 2.8, 2.2, 1.4, 2.7, 2.5, 2.6, 1.9])
 #
+#
+# # print regression_line(x, y)
+#
+# X = np.vstack([x * 0 + 1, x, x * x]).T
+# alpha = np.zeros(len(x))
+# print np.dot(np.dot(np.linalg.inv(np.dot(X.T, X)), X.T), y)
+#
+# print alpha
+#
+# exit(0)
+# beta, alpha = regression_line(x, y)
+# plt.scatter(x, y)
+# plt.plot(x, x * beta + alpha, 'r', label='Fitted line')
+# beta = 0.0148
+# plt.plot(x, x * beta + alpha)
+# beta = 0.0502
+# plt.plot(x, x * beta + alpha)
+# plt.legend()
+# plt.show()
+#
+# print pearsonr(x, y)
+#
+# exit(0)
+#
+# x = np.array([106., 86, 100, 101, 99, 103, 97, 113, 112, 110])
+# y = np.array([7, 0, 27, 50, 28, 29, 20, 12, 6, 17])
+#
+# x = np.array([12, 27, 20, 19, 20, 15, 23, 14, 26, 22, 19, 21, 20, 17, 32, 23.])
+#
+# print histogram(x)
+# #
 # print scipy.stats.stats.spearmanr(x, y)
 # print spearmanr (x, y)
 # print pearsonr(x, y)

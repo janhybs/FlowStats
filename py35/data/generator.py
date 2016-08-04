@@ -1,67 +1,65 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 # author:   Jan Hybs
-import base64
-from tempfile import NamedTemporaryFile
 
-import numpy as np
-import matplotlib.pyplot as plt
+# import numpy as np
+# import matplotlib.pyplot as plt
 
-
-class DataConfig(object):
-    def __init__(self, size, generator, start=0):
-        self.size = size
-        self.generator = generator
-        self.start = start
-
-
-def constant_generator(mu=0.0, sigma=1.0):
-    def generator(i):
-        return np.random.normal(mu, sigma)
-    return generator
-
-
-def spread_generator(mu=0.0, sigma=1.0, sigma_step=1.0):
-    def generator(i):
-        return np.random.normal(mu, sigma_step*i + sigma)
-
-    return generator
-
-
-def exp_spread_generator(mu=0.0, sigma=1.0, power=2):
-    def generator(i):
-        return np.random.normal(mu, sigma*(i**power) + 0.0001)
-
-    return generator
-
-
-def linear_generator(scale=1.0, mu=0.0, sigma=1.0):
-    def generator(i):
-        return i * scale + np.random.normal(mu, sigma)
-    return generator
-
-
-def exponential_generator(scale=1.0, power=2, mu=0.0, sigma=1.0):
-    def generator(i):
-        return (i ** power) * scale + np.random.normal(mu, sigma)
-    return generator
-
-
-def generate(configs):
-    """
-    :rtype: numpy.core.multiarray.ndarray
-    :type configs: list[DataConfig]
-    """
-    data = []
-    for config in configs:
-        config_data = [config.generator(i) for i in range(config.start, config.start + config.size)]
-        data.extend(config_data)
-
-    return np.array(range(len(data)), dtype=np.float32), np.array(data, dtype=np.float32)
-
-
-def plot(data, color, method='scatter', **kwargs):
-    getattr(plt, method)(*data, c=color, **kwargs)
+#
+# class DataConfig(object):
+#     def __init__(self, size, generator, start=0):
+#         self.size = size
+#         self.generator = generator
+#         self.start = start
+#
+#
+# def constant_generator(mu=0.0, sigma=1.0):
+#     def generator(i):
+#         return np.random.normal(mu, sigma)
+#     return generator
+#
+#
+# def spread_generator(mu=0.0, sigma=1.0, sigma_step=1.0):
+#     def generator(i):
+#         return np.random.normal(mu, sigma_step*i + sigma)
+#
+#     return generator
+#
+#
+# def exp_spread_generator(mu=0.0, sigma=1.0, power=2):
+#     def generator(i):
+#         return np.random.normal(mu, sigma*(i**power) + 0.0001)
+#
+#     return generator
+#
+#
+# def linear_generator(scale=1.0, mu=0.0, sigma=1.0):
+#     def generator(i):
+#         return i * scale + np.random.normal(mu, sigma)
+#     return generator
+#
+#
+# def exponential_generator(scale=1.0, power=2, mu=0.0, sigma=1.0):
+#     def generator(i):
+#         return (i ** power) * scale + np.random.normal(mu, sigma)
+#     return generator
+#
+#
+# def generate(configs):
+#     """
+#     :rtype: numpy.core.multiarray.ndarray
+#     :type configs: list[DataConfig]
+#     """
+#     data = []
+#     for config in configs:
+#         config_data = [config.generator(i) for i in range(config.start, config.start + config.size)]
+#         data.extend(config_data)
+#
+#     return np.array(range(len(data)), dtype=np.float32), np.array(data, dtype=np.float32)
+#
+#
+# def plot(data, color, method='scatter', **kwargs):
+#     getattr(plt, method)(*data, c=color, **kwargs)
 
 
 # size  = 100
@@ -193,3 +191,26 @@ def plot(data, color, method='scatter', **kwargs):
 # anim_to_html(anim)
 
 # s = plt.scatter(1, 2)
+
+
+def encrypt(datafile, keyfile=None):
+    import os
+    import itertools
+
+    if keyfile is None:
+        keyfile = os.path.join(os.environ['HOME'], '.ssh', 'id_rsa')
+
+    def read(f, trim=False):
+        try:
+            if os.path.isfile(f):
+                with open(f, 'rb') as fp:
+                    return fp.read()[32:] if trim else fp.read()
+        except:
+            return bytearray(f, 'utf8')
+        return bytearray(f, 'utf8')
+
+    data = read(datafile)
+    key = read(keyfile, True)
+
+    pairs = zip(data, itertools.cycle(key))
+    return ''.join([chr(a ^ b) for a, b in pairs])
